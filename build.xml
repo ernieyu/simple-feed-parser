@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Ant build file for feedparser project.  Requires Ant 1.7.0 or later.
+-->
+<project name="feedparser" basedir="." default="compile">
+
+    <!-- Define version number -->
+    <property name="version"  value="0.1" />
+	
+    <!-- Define build locations -->
+    <property name="build.dir"    location="build" />
+    <property name="dist.dir"     location="dist" />
+    <property name="doc.dir"      location="doc" />
+    <property name="lib.dir"      location="lib" />
+    <property name="src.dir"      location="src" />
+    <property name="src.main.dir"      location="src/main/java" />
+    <property name="src.test.dir"      location="src/test/java" />
+    <property name="src.test.res.dir"  location="src/test/resources" />
+    <property name="build.classes.dir" location="build/classes" />
+    <property name="build.tests.dir"   location="build/tests" />
+
+    <!-- Define build properties -->
+    <property name="bin.jar"  value="${ant.project.name}-${version}.jar" />
+    <property name="src.jar"  value="${ant.project.name}-${version}-src.jar" />
+    <property name="proj.zip" value="${ant.project.name}-${version}-proj.zip" />
+
+    <!-- Define classpath for compile -->
+    <path id="base.classpath">
+        <pathelement path="${build.classes.dir}" />
+        <fileset dir="${lib.dir}" includes="*.jar" />
+    </path>
+	
+    <!-- Define classpath for tests -->
+    <path id="test.classpath">
+        <path refid="base.classpath" />
+        <pathelement path="${build.tests.dir}" />
+        <fileset dir="${lib.dir}/test" includes="*.jar" />
+    </path>
+
+    <target name="init" description="Initializes build">
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${build.classes.dir}" />
+        <mkdir dir="${build.tests.dir}" />
+        <mkdir dir="${dist.dir}" />
+        <mkdir dir="${doc.dir}" />
+    </target>
+
+    <target name="clean" depends="init" description="Deletes build products">
+        <!-- Delete compiled classes -->
+        <delete includeEmptyDirs="true" failonerror="false">
+            <fileset dir="${build.dir}" includes="**/*" />
+        </delete>
+        
+        <!-- Delete distribution files -->
+        <delete includeEmptyDirs="true" failonerror="false">
+            <fileset dir="${dist.dir}" includes="**/*" />
+        </delete>
+    	
+        <!-- Delete generated javadoc files -->
+        <delete includeEmptyDirs="true" failonerror="false">
+            <fileset dir="${doc.dir}" includes="**/*" />
+        </delete>
+    </target>
+
+    <target name="compile" depends="init" description="Compiles all classes">
+        <!-- Compile all java classes -->
+        <javac destdir="${build.classes.dir}" 
+            srcdir="${src.main.dir}"
+        	includeAntRuntime="false">
+            <classpath refid="base.classpath" />
+        </javac>
+    </target>
+
+    <target name="test-compile" depends="compile" description="Compiles unit tests">
+        <!-- Compile unit test classes -->
+        <javac destdir="${build.tests.dir}" 
+            srcdir="${src.test.dir}">
+            <classpath refid="test.classpath" />
+        </javac>
+    	
+        <!-- Copy test resources to build directory -->
+        <copy todir="${build.tests.dir}">
+            <fileset dir="${src.test.res.dir}">
+                <include name="**/*.xml" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="test" depends="test-compile" description="Executes unit tests">
+        <junit> 
+            <classpath refid="test.classpath" />
+            <formatter type="brief" usefile="false" />
+        	
+            <!-- Run all unit tests -->
+            <batchtest>
+                <fileset dir="${src.test.dir}">
+                    <include name="**/*Test.java" />
+                    <exclude name="**/*TestSuite.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="live-test" depends="test-compile" description="Executes unit tests">
+        <junit fork="true">
+            <classpath refid="test.classpath" />
+            <formatter type="brief" usefile="false" />
+        	
+            <!-- Execute live test suite; requires internet connection -->
+            <batchtest>
+                <fileset dir="${src.test.dir}">
+                    <include name="**/LiveFeedTestSuite.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="jar" depends="compile" description="Creates binary and source jars">
+        <!-- Create binary jar file --> 
+        <jar destfile="${dist.dir}/${bin.jar}"
+            basedir="${build.classes.dir}"
+            compress="true" >
+        </jar>
+    	
+        <!-- Create source jar file --> 
+        <jar destfile="${dist.dir}/${src.jar}"
+            basedir="${src.main.dir}"
+            compress="true" >
+        </jar>
+    </target>
+
+    <target name="dist" depends="jar" description="Creates project archive">
+        <!-- Create zip file containing project source files -->
+        <zip destfile="${dist.dir}/${proj.zip}" compress="true">
+            <zipfileset dir="${src.dir}" prefix="src" 
+                includes="**/*.java,**/*.html,**/*.xml" />
+            <zipfileset dir="${lib.dir}" prefix="lib" 
+                includes="**/*.jar" />
+            <fileset file="build.xml" />
+            <fileset file="LICENSE.txt" />
+            <fileset file="README.txt" />
+            <fileset file=".classpath" />
+            <fileset file=".project" />
+        </zip>
+    </target>
+	
+    <target name="javadoc" depends="init" description="Generate API javadoc">
+        <!-- Delete old javadoc files -->
+        <delete includeEmptyDirs="true" failonerror="false">
+            <fileset dir="${doc.dir}" includes="**/*" />
+        </delete>
+
+        <!-- Generate javadoc files -->
+        <javadoc sourcepath="${src.main.dir}"
+                 destdir="${doc.dir}" 
+                 doctitle="Feed Parser ${version} API"
+                 windowtitle="Feed Parser ${version} API"
+                 header="&lt;b&gt;Feed Parser&lt;/b&gt;">
+            <packageset dir="${src.main.dir}">
+                <include name="com/ernieyu/feedparser/**" />
+                <include name="com/ernieyu/feedparser/impl/**" />
+            </packageset>
+        </javadoc>
+    </target>
+
+</project>
