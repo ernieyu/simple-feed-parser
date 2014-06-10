@@ -15,7 +15,7 @@ public class FeedUtils {
     
     /** Date format for RSS 2.0 dates. */
     private static final DateFormat RSS2_DATE = 
-        new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
+        new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
 
     /**
      * Converts the specified Atom date string to a Date.  Atom uses a date
